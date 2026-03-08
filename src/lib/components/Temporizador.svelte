@@ -13,20 +13,20 @@
 {#if examenStore.horaCierre}
   <div
     class={[
-      'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-mono font-bold tabular-nums transition-colors',
+      'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black tracking-widest tabular-nums transition-all duration-500 shadow-sm border',
       critico
-        ? 'bg-red-600 text-white animate-pulse'
+        ? 'bg-brand-red text-white border-brand-red animate-[pulse_0.5s_infinite]'
         : urgente
-          ? 'bg-orange-100 text-orange-700'
-          : 'bg-blue-100 text-blue-700'
+          ? 'bg-brand-orange/10 text-brand-orange border-brand-orange/20'
+          : 'bg-brand-gray text-slate-700 border-slate-200'
     ].join(' ')}
     title="Tiempo restante"
   >
     <!-- Ícono reloj -->
-    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
       <circle cx="12" cy="12" r="10"/>
       <polyline points="12 6 12 12 16 14"/>
     </svg>
-    {examenStore.tiempoFormateado}
+    <span class="font-mono">{examenStore.tiempoFormateado}</span>
   </div>
 {/if}

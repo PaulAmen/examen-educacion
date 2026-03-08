@@ -15,8 +15,12 @@
   // Determina si la pregunta tiene respuesta registrada (para el indicador visual)
   const respondida = $derived(() => {
     if (!respuesta || typeof respuesta !== 'object') return false;
-    if ('respuesta' in respuesta) return Boolean(respuesta.respuesta);
-    return Object.keys(respuesta).length > 0;
+    if ('respuesta' in respuesta) {
+      const r = respuesta as RespuestaConRespuesta;
+      return Boolean(r.respuesta);
+    }
+    const r = respuesta as RespuestaUnir;
+    return Object.keys(r).length > 0;
   });
 
   const esOpcionMultiple = $derived(
@@ -27,41 +31,41 @@
 <article
   id="pregunta-{indice}"
   class={[
-    'bg-white rounded-2xl border-2 shadow-sm overflow-hidden transition-all',
-    respondida() ? 'border-green-200' : 'border-gray-200'
+    'card transition-all duration-300 border-2',
+    respondida() ? 'border-brand-green/20 bg-brand-green/[0.02]' : 'border-slate-100 hover:border-slate-200'
   ].join(' ')}
 >
   <!-- Cabecera -->
-  <header class="flex items-start gap-3 px-5 pt-5 pb-4">
-    <span
+  <header class="flex items-start gap-4 px-6 pt-6 pb-4">
+    <div
       class={[
-        'flex-shrink-0 w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center',
-        respondida() ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'
+        'shrink-0 w-10 h-10 rounded-2xl text-sm font-black flex items-center justify-center transition-all duration-500 shadow-sm',
+        respondida() ? 'bg-brand-green text-white rotate-[360deg]' : 'bg-slate-900 text-white'
       ].join(' ')}
     >
       {indice + 1}
-    </span>
+    </div>
 
     <div class="flex-1 min-w-0">
-      <div class="flex flex-wrap items-center gap-2 mb-1">
-        <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <span class="text-[10px] font-black text-brand-red bg-brand-red/5 px-2.5 py-1 rounded-md uppercase tracking-widest border border-brand-red/10">
           {pregunta.Tipo_Pregunta}
         </span>
         {#if pregunta.Materia}
-          <span class="text-xs text-gray-500 font-semibold">{pregunta.Materia}</span>
+          <span class="text-[10px] text-slate-400 font-black uppercase tracking-widest">{pregunta.Materia}</span>
         {/if}
         {#if pregunta.Tema}
-          <span class="text-xs text-gray-400">· {pregunta.Tema}</span>
+          <span class="text-[10px] text-slate-300 font-bold">/ {pregunta.Tema}</span>
         {/if}
       </div>
-      <p class="text-gray-900 font-medium leading-relaxed text-sm sm:text-base">
+      <p class="text-slate-900 font-bold leading-relaxed text-base sm:text-lg tracking-tight">
         {pregunta.Enunciado}
       </p>
     </div>
   </header>
 
   <!-- Cuerpo con el componente de respuesta -->
-  <div class="px-5 pb-5">
+  <div class="px-6 pb-6">
     {#if esOpcionMultiple}
       <PreguntaOpcionMultiple
         {pregunta}
@@ -88,4 +92,11 @@
       />
     {/if}
   </div>
+
+  {#if respondida()}
+    <div class="bg-brand-green/10 py-1.5 px-6 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+      <svg class="w-3 h-3 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
+      <span class="text-[10px] font-black text-brand-green uppercase tracking-[0.2em]">Respuesta registrada</span>
+    </div>
+  {/if}
 </article>

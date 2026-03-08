@@ -1,1 +1,48 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-red: #D90416;
+  --color-brand-green: #025918;
+  --color-brand-yellow: #F2CC0F;
+  --color-brand-orange: #D9631E;
+  --color-brand-gray: #F2F2F2;
+
+  --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+@layer base {
+  body {
+    @apply bg-brand-gray text-slate-900 antialiased;
+  }
+
+  /* Custom scrollbar for a modern look */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-primary {
+  @apply bg-brand-red text-white hover:bg-red-700 shadow-sm;
+}
+
+.btn-secondary {
+  @apply bg-brand-green text-white hover:bg-green-800 shadow-sm;
+}
+
+.btn-outline {
+  @apply border-2 border-slate-200 hover:border-brand-red hover:text-brand-red;
+}

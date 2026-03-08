@@ -20,23 +20,22 @@
   );
 
   function seleccionar(letra: string) {
-    // Preservar justificación si ya existe (en caso de que se cambie la opción)
     onRespuesta(indice, { ...respuesta, respuesta: letra });
   }
 
 </script>
 
-<div class="space-y-3">
-  <fieldset {disabled} class="space-y-2 border-none p-0">
+<div class="space-y-4">
+  <fieldset {disabled} class="grid gap-3 border-none p-0">
     <legend class="sr-only">Selecciona una opción</legend>
     {#each opciones as opcion}
       <label
         class={[
-          'flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all',
+          'group relative flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 shadow-sm active:scale-[0.98]',
           respuesta?.respuesta === opcion.letra
-            ? 'border-blue-600 bg-blue-50'
-            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
-          disabled ? 'opacity-60 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
+            ? 'border-brand-green bg-brand-green/[0.03] shadow-brand-green/10'
+            : 'border-slate-100 hover:border-slate-300 hover:bg-slate-50',
+          disabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
         ].join(' ')}
       >
         <input
@@ -48,19 +47,30 @@
           {disabled}
           class="sr-only"
         />
+        
         <span
           class={[
-            'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors',
+            'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black shrink-0 transition-all duration-500',
             respuesta?.respuesta === opcion.letra
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-600'
+              ? 'bg-brand-green text-white shadow-lg shadow-brand-green/20 rotate-[360deg]'
+              : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
           ].join(' ')}
         >
           {opcion.letra}
         </span>
-        <span class="text-sm text-gray-800 leading-relaxed">{opcion.texto}</span>
+        
+        <span class="text-sm sm:text-base text-slate-700 font-bold leading-snug flex-1">
+          {opcion.texto}
+        </span>
+
+        {#if respuesta?.respuesta === opcion.letra}
+          <div class="absolute right-4 text-brand-green animate-in zoom-in duration-300">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        {/if}
       </label>
     {/each}
   </fieldset>
-
 </div>
