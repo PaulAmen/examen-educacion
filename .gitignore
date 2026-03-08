@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Build y caché de SvelteKit
+build/
+.svelte-kit/
+
+# Variables de entorno (NUNCA subir al repo)
+.env
+.env.local
+.env.*.local
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
