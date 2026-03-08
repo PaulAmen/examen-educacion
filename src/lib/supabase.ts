@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY } from '$env/static/public';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 // ─── Dominio institucional ────────────────────────────────────────────────────
 export const DOMINIO_INSTITUCIONAL = '@unesum.edu.ec';
@@ -32,8 +34,8 @@ export interface ExamenAsignado {
 // Se usa createClient<any> para evitar inferencia incorrecta de tipos en queries.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabase = createClient<any>(
-  PUBLIC_SUPABASE_URL,
-  PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
   {
     auth: {
       flowType: 'pkce',
