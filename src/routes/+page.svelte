@@ -6,8 +6,11 @@
   import Temporizador from '$lib/components/Temporizador.svelte';
   import IndicadorGuardado from '$lib/components/IndicadorGuardado.svelte';
 
+  const PREGUNTAS_POR_PAGINA = 10;
+
   let inicializado = $state(false);
-  let confirmando = $state(false); // modal "¿Entregar examen?"
+  let confirmando = $state(false);
+  let paginaActual = $state(0);
 
   // Cuando el usuario esté autenticado, inicializar el examen
   $effect(() => {
@@ -20,9 +23,20 @@
   onDestroy(() => examenStore.destroy());
 
   const bloqueado = $derived(examenStore.estado === 'finalizado');
-  const sinResponder = $derived(
-    examenStore.preguntas.length - examenStore.preguntasRespondidas
+  const sinResponder = $derived(examenStore.preguntas.length - examenStore.preguntasRespondidas);
+  const totalPaginas = $derived(Math.ceil(examenStore.preguntas.length / PREGUNTAS_POR_PAGINA));
+  const preguntasPagina = $derived(
+    examenStore.preguntas.slice(
+      paginaActual * PREGUNTAS_POR_PAGINA,
+      (paginaActual + 1) * PREGUNTAS_POR_PAGINA
+    )
   );
+  const esUltimaPagina = $derived(paginaActual >= totalPaginas - 1);
+
+  function irAPagina(n: number) {
+    paginaActual = n;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   async function confirmarEntrega() {
     confirmando = false;
@@ -231,13 +245,14 @@
       </div>
     </header>
 
-    <!-- Lista de preguntas -->
+    <!-- Lista de preguntas (página actual) -->
     <main class="max-w-2xl mx-auto px-4 py-6 space-y-5 pb-32">
-      {#each examenStore.preguntas as pregunta, i (pregunta.ID_Pregunta)}
+      {#each preguntasPagina as pregunta, i (pregunta.ID_Pregunta)}
+        {@const indiceGlobal = paginaActual * PREGUNTAS_POR_PAGINA + i}
         <PreguntaRenderer
           {pregunta}
-          indice={i}
-          respuesta={examenStore.respuestas[String(i)]}
+          indice={indiceGlobal}
+          respuesta={examenStore.respuestas[String(indiceGlobal)]}
           onRespuesta={(idx, valor) => examenStore.guardarRespuesta(idx, valor)}
           disabled={false}
         />
@@ -250,16 +265,41 @@
       {/if}
     </main>
 
-    <!-- Botón de entrega fijo al fondo (mobile-first) -->
-    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 p-4 shadow-lg">
-      <div class="max-w-2xl mx-auto">
+    <!-- Barra de navegación fija al fondo -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
+      <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+        <!-- Anterior -->
         <button
-          onclick={() => (confirmando = true)}
-          disabled={examenStore.guardando}
-          class="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors text-base"
+          onclick={() => irAPagina(paginaActual - 1)}
+          disabled={paginaActual === 0}
+          class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
-          {examenStore.guardando ? 'Guardando…' : 'Entregar examen'}
+          ← Ant.
         </button>
+
+        <!-- Indicador central -->
+        <div class="flex-1 text-center text-sm text-gray-500">
+          <span class="font-semibold text-gray-800">{paginaActual + 1}</span>
+          <span class="text-gray-400"> / {totalPaginas}</span>
+        </div>
+
+        <!-- Siguiente o Entregar -->
+        {#if esUltimaPagina}
+          <button
+            onclick={() => (confirmando = true)}
+            disabled={examenStore.guardando}
+            class="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl transition-colors text-sm"
+          >
+            {examenStore.guardando ? 'Guardando…' : 'Entregar examen'}
+          </button>
+        {:else}
+          <button
+            onclick={() => irAPagina(paginaActual + 1)}
+            class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition"
+          >
+            Sig. →
+          </button>
+        {/if}
       </div>
     </div>
   {/if}
@@ -287,7 +327,7 @@
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
           <strong>Atención:</strong> tienes {sinResponder} {sinResponder === 1 ? 'pregunta' : 'preguntas'} sin responder.
           Las preguntas sin respuesta cuentan como incorrectas.
-          Las de V/F y Casos de Uso sin justificación pierden el 30% del puntaje.
+          Las de Verdadero/Falso sin justificación pierden el 30% del puntaje.
         </div>
       {/if}
 

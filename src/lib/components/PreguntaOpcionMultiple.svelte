@@ -24,12 +24,6 @@
     onRespuesta(indice, { ...respuesta, respuesta: letra });
   }
 
-  function actualizarJustificacion(texto: string) {
-    onRespuesta(indice, { ...respuesta, justificacion: texto });
-  }
-
-  // Casos de Uso: la justificación siempre es visible y vale 30% de los puntos
-  const esCasoDeUso = $derived(pregunta.Tipo_Pregunta === 'Casos de Uso');
 </script>
 
 <div class="space-y-3">
@@ -69,25 +63,4 @@
     {/each}
   </fieldset>
 
-  {#if esCasoDeUso}
-    <div class="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
-      <label for="just-{indice}" class="block text-sm font-semibold text-gray-700 mb-2">
-        Justifica tu respuesta
-        <span class="font-normal text-gray-500 text-xs ml-1">(requerido para puntaje completo)</span>
-      </label>
-      <textarea
-        id="just-{indice}"
-        value={respuesta?.justificacion ?? ''}
-        oninput={(e) => actualizarJustificacion(e.currentTarget.value)}
-        {disabled}
-        rows="4"
-        placeholder="Explica por qué seleccionaste esa opción y en qué se basa tu razonamiento…"
-        class={[
-          'w-full rounded-lg border border-gray-300 p-3 text-sm leading-relaxed font-[inherit]',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y',
-          disabled ? 'bg-gray-100 cursor-not-allowed opacity-70' : 'bg-white'
-        ].join(' ')}
-      ></textarea>
-    </div>
-  {/if}
 </div>
