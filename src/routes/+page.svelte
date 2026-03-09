@@ -35,6 +35,13 @@
 
   onDestroy(() => examenStore.destroy());
 
+  // Si el admin deshabilita mientras el examen está abierto, volver a pantalla de espera
+  $effect(() => {
+    if (examenStore.examenDeshabilitado && examenAbierto) {
+      examenAbierto = false;
+    }
+  });
+
   const bloqueado = $derived(examenStore.estado === 'finalizado');
   const enCurso = $derived(examenStore.estado === 'en_curso');
   const autorizado = $derived(
@@ -55,7 +62,8 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function abrirExamen() {
+  async function abrirExamen() {
+    await examenStore.iniciarExamen(); // solo actúa si estado === 'pendiente'
     examenAbierto = true;
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -185,26 +193,50 @@
         </div>
 
       {:else if !autorizado}
-        <div class="card p-8 max-w-sm w-full text-center space-y-6">
-          <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
-            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+        <div class="card p-8 max-w-sm w-full text-center space-y-5">
+          <img src="{base}/logo.webp" alt="Logo UNESUM" class="h-14 object-contain mx-auto" />
+
+          <div class="space-y-1">
+            {#if examenStore.nombreEstudiante}
+              <p class="text-base font-bold text-slate-800">{examenStore.nombreEstudiante}</p>
+            {/if}
+            <p class="text-xs text-slate-400">{authStore.user?.email}</p>
           </div>
+
+          <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
+            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+            </svg>
+          </div>
+
           <div>
-            <h2 class="text-xl font-bold text-slate-900">Acceso no habilitado</h2>
-            <p class="text-slate-500 text-sm mt-3 leading-relaxed">
-              {#if examenStore.examenDeshabilitado}El sistema se habilitará el día y hora programados.{:else}No tienes un examen asignado.{/if}
+            <h3 class="text-lg font-bold text-slate-900">Acceso no habilitado</h3>
+            <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+              {#if examenStore.examenDeshabilitado}
+                El sistema se habilitará en el horario programado.
+              {:else}
+                No tienes un examen asignado. Contacta a coordinación académica.
+              {/if}
             </p>
           </div>
-          <button onclick={() => authStore.logout()} class="btn btn-outline w-full">Cerrar sesión</button>
+
+          <button onclick={() => authStore.logout()} class="btn btn-outline w-full">
+            Cerrar sesión
+          </button>
         </div>
 
       {:else}
         <!-- Welcome Screen -->
-        <div class="text-center mb-10 space-y-4">
-          <img src="{base}/logo.webp" alt="Logo UNESUM" class="h-16 object-contain mx-auto" />
-          <div class="space-y-1">
+        <div class="text-center mb-10 space-y-5">
+          <img src="{base}/logo.webp" alt="Logo UNESUM" class="h-20 object-contain mx-auto drop-shadow-md" />
+          <div class="space-y-2">
             <h1 class="text-3xl font-black text-slate-900 tracking-tight">EVALUACIÓN ACADÉMICA</h1>
-            <p class="text-slate-500 font-bold text-sm tracking-widest uppercase">{authStore.user?.email}</p>
+            <div class="inline-block bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/50 shadow-sm">
+              {#if examenStore.nombreEstudiante}
+                <p class="text-sm font-black text-slate-800 uppercase tracking-wide">{examenStore.nombreEstudiante}</p>
+              {/if}
+              <p class="text-slate-500 text-[11px] font-bold tracking-widest">{authStore.user?.email}</p>
+            </div>
           </div>
         </div>
 
@@ -255,35 +287,50 @@
 
   {:else}
     <!-- Active Exam Interface -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-black text-brand-red uppercase tracking-widest bg-brand-red/5 px-2 py-0.5 rounded border border-brand-red/10">
-              {#if examenStore.nivel}{etiquetaNivel(examenStore.nivel)}{/if}
-            </span>
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+      <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            {#if examenStore.nivel}
+              <span class="text-[10px] font-black text-white bg-brand-red px-2 py-0.5 rounded-md uppercase tracking-[0.2em] shadow-sm">
+                {etiquetaNivel(examenStore.nivel)}
+              </span>
+            {/if}
+            {#if examenStore.nombreEstudiante}
+              <span class="text-xs font-black text-slate-800 truncate uppercase tracking-tight">{examenStore.nombreEstudiante}</span>
+            {/if}
           </div>
-          <p class="text-[11px] text-slate-400 font-bold truncate mt-1">{authStore.user?.email}</p>
+          <p class="text-[10px] text-slate-400 font-bold truncate uppercase tracking-widest">{authStore.user?.email}</p>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
+        
+        <div class="flex items-center gap-3 shrink-0">
           <IndicadorGuardado />
-          <div class="w-px h-6 bg-slate-100 mx-1"></div>
+          <div class="w-px h-8 bg-slate-100 hidden sm:block"></div>
           <Temporizador />
         </div>
       </div>
 
-      <div class="bg-slate-100 h-1.5 relative overflow-hidden">
-        <div class="bg-brand-green h-full transition-all duration-700 ease-out shadow-[0_0_8px_rgba(2,89,24,0.3)]" style="width: {examenStore.preguntas.length > 0 ? (examenStore.preguntasRespondidas / examenStore.preguntas.length) * 100 : 0}%"></div>
+      <!-- Barra de progreso -->
+      <div class="bg-slate-100 h-2 relative overflow-hidden">
+        <div
+          class="bg-brand-green h-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(2,89,24,0.4)]"
+          style="width: {examenStore.preguntas.length > 0 ? (examenStore.preguntasRespondidas / examenStore.preguntas.length) * 100 : 0}%"
+        ></div>
       </div>
-      <div class="max-w-2xl mx-auto px-4 py-2 flex justify-between items-center">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-          PROGRESO: <span class="text-slate-900">{examenStore.preguntasRespondidas}</span> / {examenStore.preguntas.length} PREGUNTAS
+      <div class="max-w-3xl mx-auto px-4 py-2 flex justify-between items-center bg-slate-50/50 backdrop-blur-sm border-b border-slate-100">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          PROGRESO: <span class="text-brand-green">{examenStore.preguntasRespondidas}</span> <span class="text-slate-300">/</span> {examenStore.preguntas.length}
         </p>
-        {#if !online}<span class="text-[10px] font-black text-brand-orange animate-pulse">MODO OFFLINE</span>{/if}
+        {#if !online}
+          <span class="text-[10px] font-black text-brand-orange animate-pulse flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            OFFLINE
+          </span>
+        {/if}
       </div>
     </header>
 
-    <main class="max-w-2xl mx-auto px-4 py-8 space-y-8 pb-40">
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-8 pb-40">
       {#each preguntasPagina as pregunta, i (pregunta.ID_Pregunta)}
         {@const indiceGlobal = paginaActual * PREGUNTAS_POR_PAGINA + i}
         <PreguntaRenderer {pregunta} indice={indiceGlobal} respuesta={examenStore.respuestas[String(indiceGlobal)]} onRespuesta={(idx, valor) => examenStore.guardarRespuesta(idx, valor)} disabled={false} />
@@ -291,7 +338,7 @@
     </main>
 
     <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
-      <div class="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
+      <div class="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
         <button onclick={() => irAPagina(paginaActual - 1)} disabled={paginaActual === 0} class="flex items-center justify-center w-12 h-12 rounded-xl border-2 border-slate-100 text-slate-400 hover:text-brand-red hover:border-brand-red/20 hover:bg-brand-red/5 disabled:opacity-20 transition-all"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg></button>
         <div class="flex-1 flex flex-col items-center">
           <div class="flex gap-1.5">

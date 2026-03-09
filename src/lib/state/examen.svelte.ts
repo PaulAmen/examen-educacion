@@ -40,8 +40,8 @@ export interface Pregunta {
 //   Esto permite que calificar.js itere con: respuestas[String(i)]
 //
 //   Opción Múltiple:   { respuesta: "A" }
-//   Casos de Uso:      { respuesta: "B", justificacion: "texto libre" }
-//   Verdadero o Falso: { respuesta: "Verdadero", justificacion: "texto libre" }
+//   Casos de Uso:      { respuesta: "B" }
+//   Verdadero o Falso: { respuesta: "Falso", justificacion: "texto libre" }
 //   Unir con Líneas:   { "Concepto1": "Def3", "Concepto2": "Def1", ... }
 //                       ↑ clave = nombre del concepto (Concepto1..4), valor = texto definición
 
@@ -57,7 +57,9 @@ export type EstadoExamen = 'pendiente' | 'en_curso' | 'finalizado';
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'examen_respuestas';
-const DEBOUNCE_MS = 1500; // igual que el código original
+const DEBOUNCE_MS = 1500;
+const DURACION_EXAMEN_MS = 2 * 60 * 60 * 1000; // 2 horas
+const POLLING_MS = 60_000; // verificar cierre admin cada 60 s
 
 // ─── Store global ─────────────────────────────────────────────────────────────
 class ExamenStore {
@@ -98,6 +100,7 @@ class ExamenStore {
 
   #debounceTimer: ReturnType<typeof setTimeout> | null = null;
   #intervalId: ReturnType<typeof setInterval> | null = null;
+  #pollingId: ReturnType<typeof setInterval> | null = null;
 
   // ── Inicialización ──────────────────────────────────────────────────────────
 
@@ -119,11 +122,7 @@ class ExamenStore {
       const emailEnBeta = config.emails_beta.includes(email);
       if (!config.habilitado && !emailEnBeta) {
         this.examenDeshabilitado = true;
-        return;
-      }
-
-      if (config.hora_cierre) {
-        this.horaCierre = new Date(config.hora_cierre);
+        // Continuar para cargar el nombre del estudiante aunque esté deshabilitado
       }
 
       // 2. Obtener examen asignado
@@ -134,12 +133,15 @@ class ExamenStore {
         .single();
 
       if (errExamen || !examen) {
-        this.sinExamen = true;
+        if (!this.examenDeshabilitado) this.sinExamen = true;
         return;
       }
 
-      this.examenId = examen.id_examen;
+      // Guardar nombre siempre (se muestra en pantalla de bloqueo y bienvenida)
       this.nombreEstudiante = examen.nombre_estudiante ?? null;
+
+      // Si está deshabilitado, no continuar con la carga del examen
+      if (this.examenDeshabilitado) return;
       this.nivel = examen.nivel as 4 | 8;
       this.preguntas = (examen.preguntas_asignadas as Pregunta[]) ?? [];
       this.estado = examen.estado as EstadoExamen;
@@ -156,20 +158,24 @@ class ExamenStore {
         void this.#syncSupabase();
       }
 
-      // 4. Iniciar temporizador si hay hora de cierre
-      if (this.horaCierre) {
-        this.#iniciarTemporizador();
+      // 4. Calcular hora de cierre efectiva (la más temprana entre admin y estudiante)
+      //    - examen.hora_cierre: se guarda cuando el estudiante inicia (now + 2h)
+      //    - config.hora_cierre: override global del administrador
+      const cierreEstudiante = examen.hora_cierre ? new Date(examen.hora_cierre) : null;
+      const cierreAdmin = config.hora_cierre ? new Date(config.hora_cierre) : null;
+
+      if (cierreEstudiante && cierreAdmin) {
+        this.horaCierre = cierreEstudiante < cierreAdmin ? cierreEstudiante : cierreAdmin;
+      } else {
+        this.horaCierre = cierreEstudiante ?? cierreAdmin;
       }
 
-      // 5. Marcar como en_curso si estaba pendiente
-      const examenId = this.examenId!;
-      if (this.estado === 'pendiente') {
-        await supabase
-          .from('examenes_asignados')
-          .update({ estado: 'en_curso' })
-          .eq('id_examen', examenId);
-        this.estado = 'en_curso';
+      // 5. Si el examen ya estaba en curso, iniciar temporizador y polling
+      if (this.estado === 'en_curso' && this.horaCierre) {
+        this.#iniciarTemporizador();
+        this.#iniciarPolling();
       }
+
     } catch (e) {
       this.error = e instanceof Error ? e.message : 'Error al cargar el examen';
     } finally {
@@ -180,10 +186,33 @@ class ExamenStore {
   // ── API pública ─────────────────────────────────────────────────────────────
 
   /**
-   * Guarda la respuesta de una pregunta usando su ÍNDICE como clave.
-   * Indice = posición en el array preguntas_asignadas (0-based).
-   * Compatible con scripts/calificar.js.
+   * Marca el examen como en_curso, guarda hora_cierre = ahora + 2h y arranca el timer.
+   * Solo actúa si el estado es 'pendiente'.
    */
+  async iniciarExamen() {
+    const examenId = this.examenId;
+    if (!examenId || this.estado !== 'pendiente') return;
+
+    const horaCierre = new Date(Date.now() + DURACION_EXAMEN_MS);
+
+    await supabase
+      .from('examenes_asignados')
+      .update({ estado: 'en_curso', hora_cierre: horaCierre.toISOString() })
+      .eq('id_examen', examenId);
+
+    this.estado = 'en_curso';
+
+    // Si el admin ya tiene un cierre más temprano, respetar el menor
+    if (this.horaCierre && this.horaCierre < horaCierre) {
+      // horaCierre global admin ya es más restrictiva, no sobreescribir
+    } else {
+      this.horaCierre = horaCierre;
+    }
+
+    this.#iniciarTemporizador();
+    this.#iniciarPolling();
+  }
+
   guardarRespuesta(indice: number, valor: RespuestaValor) {
     if (this.estado === 'finalizado') return;
     this.respuestas = { ...this.respuestas, [String(indice)]: valor };
@@ -201,7 +230,6 @@ class ExamenStore {
 
     this.guardando = true;
 
-    // Cancelar cualquier debounce pendiente
     if (this.#debounceTimer) {
       clearTimeout(this.#debounceTimer);
       this.#debounceTimer = null;
@@ -222,12 +250,14 @@ class ExamenStore {
     } else {
       this.estado = 'finalizado';
       if (this.#intervalId) clearInterval(this.#intervalId);
+      if (this.#pollingId) clearInterval(this.#pollingId);
     }
   }
 
   destroy() {
     if (this.#intervalId) clearInterval(this.#intervalId);
     if (this.#debounceTimer) clearTimeout(this.#debounceTimer);
+    if (this.#pollingId) clearInterval(this.#pollingId);
   }
 
   // ── Privados ────────────────────────────────────────────────────────────────
@@ -285,8 +315,58 @@ class ExamenStore {
     this.#intervalId = setInterval(tick, 1000);
   }
 
+  /**
+   * Polling cada 60s: detecta si el administrador cerró el examen desde la DB.
+   * Dos mecanismos de cierre admin:
+   *   1. Actualizar `configuracion_examen.hora_cierre` a una fecha pasada/cercana
+   *   2. Poner `configuracion_examen.habilitado = false`
+   */
+  #iniciarPolling() {
+    if (this.#pollingId) clearInterval(this.#pollingId);
+    this.#pollingId = setInterval(() => void this.#verificarCierreAdmin(), POLLING_MS);
+  }
+
+  async #verificarCierreAdmin() {
+    if (this.estado === 'finalizado') {
+      if (this.#pollingId) clearInterval(this.#pollingId);
+      return;
+    }
+
+    const { data: config } = await supabase
+      .from('configuracion_examen')
+      .select('habilitado, hora_cierre')
+      .single();
+
+    if (!config) return;
+
+    // Admin deshabilitó — volver a pantalla de espera sin tocar la DB del estudiante
+    if (!config.habilitado) {
+      this.examenDeshabilitado = true;
+      return;
+    }
+
+    // Admin re-habilitó — permitir retomar
+    if (this.examenDeshabilitado) {
+      this.examenDeshabilitado = false;
+    }
+
+    // Admin actualizó hora_cierre global a una hora más temprana
+    if (config.hora_cierre) {
+      const cierreAdmin = new Date(config.hora_cierre);
+      if (!this.horaCierre || cierreAdmin < this.horaCierre) {
+        this.horaCierre = cierreAdmin;
+        // Si ya venció, cerrar de inmediato
+        if (cierreAdmin <= new Date()) {
+          void this.#finalizarPorTiempo();
+        }
+        // Si no, el temporizador ya activo usará el nuevo horaCierre en el próximo tick
+      }
+    }
+  }
+
   async #finalizarPorTiempo() {
     if (this.#intervalId) clearInterval(this.#intervalId);
+    if (this.#pollingId) clearInterval(this.#pollingId);
     if (this.estado === 'finalizado') return;
 
     this.estado = 'finalizado';
