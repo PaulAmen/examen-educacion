@@ -13,12 +13,12 @@
 {#if examenStore.horaCierre}
   <div
     class={[
-      'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black tracking-widest tabular-nums transition-all duration-500 shadow-sm border',
+      'flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[13px] font-black tracking-widest tabular-nums transition-all duration-500 shadow-md border-2',
       critico
         ? 'bg-brand-red text-white border-brand-red animate-[pulse_0.5s_infinite]'
         : urgente
-          ? 'bg-brand-orange/10 text-brand-orange border-brand-orange/20'
-          : 'bg-brand-gray text-slate-700 border-slate-200'
+          ? 'bg-brand-orange text-white border-brand-orange shadow-brand-orange/20'
+          : 'bg-slate-900 text-white border-slate-900 shadow-slate-900/20'
     ].join(' ')}
     title="Tiempo restante"
   >

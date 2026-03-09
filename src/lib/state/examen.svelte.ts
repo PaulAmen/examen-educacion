@@ -159,19 +159,21 @@ class ExamenStore {
       }
 
       // 4. Calcular hora de cierre efectiva (la más temprana entre admin y estudiante)
-      //    - examen.hora_cierre: se guarda cuando el estudiante inicia (now + 2h)
-      //    - config.hora_cierre: override global del administrador
       const cierreEstudiante = examen.hora_cierre ? new Date(examen.hora_cierre) : null;
       const cierreAdmin = config.hora_cierre ? new Date(config.hora_cierre) : null;
 
       if (cierreEstudiante && cierreAdmin) {
         this.horaCierre = cierreEstudiante < cierreAdmin ? cierreEstudiante : cierreAdmin;
-      } else {
+      } else if (cierreEstudiante || cierreAdmin) {
         this.horaCierre = cierreEstudiante ?? cierreAdmin;
+      } else if (this.estado === 'en_curso') {
+        // Fallback: si ya está en curso pero no hay hora_cierre en DB,
+        // asignar 2 horas desde ahora para que el temporizador no se quede vacío.
+        this.horaCierre = new Date(Date.now() + DURACION_EXAMEN_MS);
       }
 
-      // 5. Si el examen ya estaba en curso, iniciar temporizador y polling
-      if (this.estado === 'en_curso' && this.horaCierre) {
+      // 5. Iniciar temporizador y polling si hay una hora de cierre definida
+      if (this.horaCierre && (this.estado === 'en_curso' || this.estado === 'pendiente')) {
         this.#iniciarTemporizador();
         this.#iniciarPolling();
       }
@@ -186,6 +188,19 @@ class ExamenStore {
   // ── API pública ─────────────────────────────────────────────────────────────
 
   /**
+   * Flush inmediato a Supabase: cancela el debounce pendiente y guarda ahora mismo.
+   * Llamar desde visibilitychange (tab oculto) para evitar pérdida de datos en móvil.
+   */
+  async flushInmediato() {
+    if (this.estado === 'finalizado' || !this.examenId) return;
+    if (this.#debounceTimer) {
+      clearTimeout(this.#debounceTimer);
+      this.#debounceTimer = null;
+    }
+    await this.#syncSupabase();
+  }
+
+  /**
    * Marca el examen como en_curso, guarda hora_cierre = ahora + 2h y arranca el timer.
    * Solo actúa si el estado es 'pendiente'.
    */
@@ -193,24 +208,37 @@ class ExamenStore {
     const examenId = this.examenId;
     if (!examenId || this.estado !== 'pendiente') return;
 
-    const horaCierre = new Date(Date.now() + DURACION_EXAMEN_MS);
+    // 1. Calcular hora de cierre (ahora + 2 horas)
+    const localCierre = new Date(Date.now() + DURACION_EXAMEN_MS);
 
-    await supabase
-      .from('examenes_asignados')
-      .update({ estado: 'en_curso', hora_cierre: horaCierre.toISOString() })
-      .eq('id_examen', examenId);
-
+    // 2. Actualización OPTIMISTA: Reflejar en UI de inmediato
     this.estado = 'en_curso';
-
-    // Si el admin ya tiene un cierre más temprano, respetar el menor
-    if (this.horaCierre && this.horaCierre < horaCierre) {
-      // horaCierre global admin ya es más restrictiva, no sobreescribir
-    } else {
-      this.horaCierre = horaCierre;
+    
+    // Si no hay cierre previo o el nuevo es más temprano, actualizar localmente
+    if (!this.horaCierre || localCierre < this.horaCierre) {
+      this.horaCierre = localCierre;
     }
 
+    // 3. Arrancar motores visuales
     this.#iniciarTemporizador();
     this.#iniciarPolling();
+
+    // 4. Sincronizar con base de datos en segundo plano
+    try {
+      const { error } = await supabase
+        .from('examenes_asignados')
+        .update({ 
+          estado: 'en_curso', 
+          hora_cierre: localCierre.toISOString() 
+        })
+        .eq('id_examen', examenId);
+
+      if (error) throw error;
+    } catch (e) {
+      console.error('[ExamenStore] Error al iniciar examen en DB:', e);
+      // Opcional: podrías revertir el estado si es crítico, 
+      // pero para el estudiante es mejor que siga si ya empezó.
+    }
   }
 
   guardarRespuesta(indice: number, valor: RespuestaValor) {

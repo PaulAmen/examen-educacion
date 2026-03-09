@@ -27,9 +27,20 @@
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
+
+    // Flush inmediato al ocultar el tab o cerrar la app en móvil
+    const handleHide = () => void examenStore.flushInmediato();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') handleHide();
+    });
+    // pagehide cubre iOS Safari cuando visibilitychange no se dispara
+    window.addEventListener('pagehide', handleHide);
+
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
+      document.removeEventListener('visibilitychange', handleHide);
+      window.removeEventListener('pagehide', handleHide);
     };
   });
 
@@ -247,9 +258,15 @@
             {/if}
             <div>
               <p class="text-2xl font-black text-slate-900">{enCurso ? 'EXAMEN EN CURSO' : 'LISTO PARA COMENZAR'}</p>
-              <p class="text-sm text-slate-500 mt-1 font-medium">
-                {#if enCurso}Progreso: <span class="text-brand-green font-bold">{examenStore.preguntasRespondidas}</span> / {examenStore.preguntas.length}{:else}{examenStore.preguntas.length} preguntas asignadas{/if}
-              </p>
+              <div class="flex flex-col items-center gap-1 mt-1">
+                <p class="text-sm text-slate-500 font-medium">
+                  {#if enCurso}Progreso: <span class="text-brand-green font-bold">{examenStore.preguntasRespondidas}</span> / {examenStore.preguntas.length}{:else}{examenStore.preguntas.length} preguntas asignadas{/if}
+                </p>
+                <div class="flex items-center gap-1.5 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Duración: 2 Horas
+                </div>
+              </div>
             </div>
             {#if enCurso}
               <div class="bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200">
