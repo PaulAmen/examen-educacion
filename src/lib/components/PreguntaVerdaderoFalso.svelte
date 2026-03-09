@@ -68,9 +68,9 @@
         oninput={(e) => actualizarJustificacion(e.currentTarget.value)}
         {disabled}
         rows="4"
-        placeholder="Explica por qué la afirmación es falsa con argumentos técnicos o conceptuales…"
+        placeholder="Escribe aquí los argumentos técnicos o conceptuales que respaldan tu elección…"
         class={[
-          'w-full rounded-xl border-2 border-slate-200 p-4 text-sm leading-relaxed font-bold text-slate-700 tracking-tight',
+          'w-full rounded-xl border-2 border-slate-200 p-4 text-base leading-relaxed font-bold text-slate-700 tracking-tight',
           'focus:outline-none focus:border-brand-red focus:ring-4 focus:ring-brand-red/5 resize-y transition-all',
           disabled ? 'bg-slate-50 cursor-not-allowed opacity-50' : 'bg-white'
         ].join(' ')}

@@ -9,13 +9,18 @@
 
   --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 }
-
 @layer base {
   body {
     @apply bg-brand-gray text-slate-900 antialiased;
   }
 
+  /* Prevent auto-zoom on iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
   /* Custom scrollbar for a modern look */
+...
   ::-webkit-scrollbar {
     width: 8px;
   }

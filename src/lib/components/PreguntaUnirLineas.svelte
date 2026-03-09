@@ -94,7 +94,7 @@
             {disabled}
             aria-label="Definición para {concepto.texto}"
             class={[
-              'w-full appearance-none rounded-b-2xl sm:rounded-2xl border-2 px-4 py-3 text-sm font-bold tracking-tight h-full',
+              'w-full appearance-none rounded-b-2xl sm:rounded-2xl border-2 px-4 py-3 text-base font-bold tracking-tight h-full',
               'focus:outline-none focus:border-brand-red focus:ring-4 focus:ring-brand-red/5 transition-all duration-300',
               valorSeleccionado
                 ? 'border-brand-green/20 bg-brand-green/[0.03] text-brand-green'
