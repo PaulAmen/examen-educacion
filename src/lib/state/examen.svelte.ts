@@ -63,6 +63,7 @@ const DEBOUNCE_MS = 1500; // igual que el código original
 class ExamenStore {
   examenId = $state<string | null>(null);
   emailEstudiante = $state<string | null>(null);
+  nombreEstudiante = $state<string | null>(null);
   nivel = $state<4 | 8 | null>(null);
   preguntas = $state<Pregunta[]>([]);
   /** Claves: String(indice) → compatible con calificar.js */
@@ -138,6 +139,7 @@ class ExamenStore {
       }
 
       this.examenId = examen.id_examen;
+      this.nombreEstudiante = examen.nombre_estudiante ?? null;
       this.nivel = examen.nivel as 4 | 8;
       this.preguntas = (examen.preguntas_asignadas as Pregunta[]) ?? [];
       this.estado = examen.estado as EstadoExamen;

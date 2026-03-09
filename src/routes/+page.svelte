@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
+  import { base } from '$app/paths';
   import { authStore, DOMINIO_INSTITUCIONAL } from '$lib/auth.svelte.js';
   import { examenStore } from '$lib/state/examen.svelte.js';
   import PreguntaRenderer from '$lib/components/PreguntaRenderer.svelte';
@@ -123,7 +124,7 @@
       <div class="card p-8 w-full max-w-sm text-center space-y-8 bg-white/80 backdrop-blur-sm">
         <div class="space-y-4">
           <img
-            src="https://www.unesum.edu.ec/wp-content/uploads/2019/04/logo-unesum.png"
+            src="{base}/logo.webp"
             alt="Logo UNESUM"
             class="h-20 object-contain mx-auto transition-transform hover:scale-105 duration-500"
           />
@@ -204,7 +205,7 @@
         </div>
         <div class="py-4 border-y border-slate-100 space-y-1">
           <p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Estudiante</p>
-          <p class="text-sm text-slate-700 font-bold">{authStore.user?.email}</p>
+          <p class="text-sm text-slate-700 font-bold">{examenStore.nombreEstudiante ?? authStore.user?.email}</p>
           {#if examenStore.nivel}
             <p class="text-xs text-brand-green font-bold bg-green-50 inline-block px-3 py-1 rounded-full mt-2">
               {etiquetaNivel(examenStore.nivel)}
@@ -227,13 +228,13 @@
       <!-- Logo + título -->
       <div class="text-center mb-10 space-y-4">
         <img
-          src="https://www.unesum.edu.ec/wp-content/uploads/2019/04/logo-unesum.png"
+          src="{base}/logo.webp"
           alt="Logo UNESUM"
           class="h-16 object-contain mx-auto"
         />
         <div class="space-y-1">
           <h1 class="text-3xl font-black text-slate-900 tracking-tight">EVALUACIÓN ACADÉMICA</h1>
-          <p class="text-slate-500 font-bold text-sm tracking-widest uppercase">{authStore.user?.email}</p>
+          <p class="text-slate-500 font-bold text-sm tracking-widest uppercase">{examenStore.nombreEstudiante ?? authStore.user?.email}</p>
         </div>
       </div>
 
@@ -342,6 +343,11 @@
           </div>
         </div>
       {/if}
+
+      <!-- Footer for non-exam screens -->
+      <footer class="mt-12 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] border-t border-slate-200/50 pt-4">
+        BY: <span class="text-slate-800">PAUL.AMEN@UNESUM.EDU.EC</span>
+      </footer>
     </div>
 
   <!-- ── Interfaz principal del examen ─────────────────────────────────────── -->
@@ -355,7 +361,7 @@
               {#if examenStore.nivel}{etiquetaNivel(examenStore.nivel)}{/if}
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 font-bold truncate mt-1">{authStore.user?.email}</p>
+          <p class="text-[11px] text-slate-400 font-bold truncate mt-1">{examenStore.nombreEstudiante ?? authStore.user?.email}</p>
         </div>
         
         <div class="flex items-center gap-2 shrink-0">
