@@ -142,6 +142,7 @@ class ExamenStore {
 
       // Si está deshabilitado, no continuar con la carga del examen
       if (this.examenDeshabilitado) return;
+      this.examenId = examen.id_examen;
       this.nivel = examen.nivel as 4 | 8;
       this.preguntas = (examen.preguntas_asignadas as Pregunta[]) ?? [];
       this.estado = examen.estado as EstadoExamen;
