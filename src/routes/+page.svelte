@@ -92,6 +92,16 @@
 
 <svelte:head>
   <title>Evaluación Académica — UNESUM</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://paulamen.github.io/examen-educacion/" />
+  <meta property="og:title" content="Evaluación Académica — UNESUM" />
+  <meta property="og:description" content="Sistema de evaluación académica de la Universidad Estatal del Sur de Manabí." />
+  <meta property="og:image" content="https://paulamen.github.io/examen-educacion/logo.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:title" content="Evaluación Académica — UNESUM" />
+  <meta name="twitter:description" content="Sistema de evaluación académica de la Universidad Estatal del Sur de Manabí." />
+  <meta name="twitter:image" content="https://paulamen.github.io/examen-educacion/logo.webp" />
 </svelte:head>
 
 <div class="min-h-screen bg-brand-gray font-sans selection:bg-brand-red/10 selection:text-brand-red">

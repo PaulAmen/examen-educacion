@@ -118,7 +118,7 @@
         </div>
       </div>
       <button
-        onclick={() => window.close()}
+        onclick={() => window?.close()}
         class="flex items-center gap-1.5 text-[11px] font-black text-slate-400 hover:text-brand-red uppercase tracking-widest transition-colors px-3 py-1.5 rounded-lg hover:bg-brand-red/5"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
