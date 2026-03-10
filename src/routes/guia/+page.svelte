@@ -605,7 +605,7 @@
   </main>
 
   <footer class="border-t border-slate-200/50 py-6 text-center text-[11px] font-black text-slate-400 uppercase tracking-widest">
-    UNESUM — Sistema de Evaluación Académica &nbsp;·&nbsp; BY: <span class="text-slate-800">PAUL.AMEN@UNESUM.EDU.EC</span>
+    UNESUM — Sistema de Evaluación Académica<br>BY: <span class="text-slate-800">PAUL.AMEN@UNESUM.EDU.EC</span>
   </footer>
 </div>
 
