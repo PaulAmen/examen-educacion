@@ -11,9 +11,19 @@
   const correctaOM = 'B';
   let respOM = $state('');
 
-  // ── Verdadero o Falso ───────────────────────────────────────────────────────
+  // ── Verdadero o Falso (respuesta: Verdadero) ────────────────────────────────
   const correctaVF = 'Verdadero';
   let respVF = $state('');
+
+  // ── Verdadero o Falso (respuesta: Falso + justificación) ────────────────────
+  const correctaVF2 = 'Falso';
+  let respVF2 = $state('');
+  let justVF2 = $state('');
+  const palabrasClave = ['oxígeno', 'o2', 'produce', 'libera', 'fotosíntesis', 'clorofila', 'luz solar', 'co2', 'consume'];
+  const palabrasEncontradas = $derived(
+    palabrasClave.filter(p => justVF2.toLowerCase().includes(p))
+  );
+  const justificacionValida = $derived(palabrasEncontradas.length >= 2);
 
   // ── Casos de Uso ────────────────────────────────────────────────────────────
   const opcionesCU = [
@@ -58,6 +68,8 @@
   function reiniciar() {
     respOM = '';
     respVF = '';
+    respVF2 = '';
+    justVF2 = '';
     respCU = '';
     respUL = {};
   }
@@ -285,6 +297,116 @@
             </div>
           {:else}
             <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-widest">Selecciona Verdadero o Falso</div>
+          {/if}
+        </div>
+      </div>
+
+      <!-- 2b. Verdadero o Falso — respuesta Falso con justificación -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-3">
+          <span class="text-[10px] font-black text-brand-green bg-brand-green/5 px-3 py-1.5 rounded-lg uppercase tracking-widest border border-brand-green/10">
+            Verdadero o Falso
+          </span>
+          <span class="text-[10px] font-black text-brand-orange bg-brand-orange/5 px-2.5 py-1 rounded-lg uppercase tracking-widest border border-brand-orange/10">
+            Con justificación
+          </span>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-6 pb-6 space-y-4">
+            <div class="border-t border-slate-50 pt-5">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Ejemplo</p>
+              <p class="text-base font-bold text-slate-900 leading-snug mb-4">
+                La fotosíntesis produce dióxido de carbono (CO₂) como producto principal.
+              </p>
+
+              <!-- Botones V/F -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                {#each ['Verdadero', 'Falso'] as opcion}
+                  {@const seleccionada = respVF2 === opcion}
+                  {@const correcta = opcion === correctaVF2}
+                  <button
+                    onclick={() => { respVF2 = opcion; if (opcion === 'Verdadero') justVF2 = ''; }}
+                    class={[
+                      'py-5 rounded-2xl font-black text-sm tracking-wide uppercase transition-all duration-300 border-2',
+                      seleccionada
+                        ? opcion === 'Verdadero' ? 'bg-brand-green border-brand-green text-white'
+                          : 'bg-brand-red border-brand-red text-white'
+                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 cursor-pointer'
+                    ].join(' ')}
+                  >
+                    <div class="flex items-center justify-center gap-2">
+                      {#if seleccionada}
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                          <path d="M5 13l4 4L19 7"/>
+                        </svg>
+                      {/if}
+                      {opcion}
+                    </div>
+                  </button>
+                {/each}
+              </div>
+
+              <!-- Justificación — solo cuando responde Falso -->
+              {#if respVF2 === 'Falso'}
+                <div class={[
+                  'rounded-2xl p-5 border-2 transition-all duration-300',
+                  justificacionValida ? 'bg-brand-green/[0.03] border-brand-green/20' : 'bg-brand-gray border-slate-100'
+                ].join(' ')}>
+                  <label for="just-vf2" class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">
+                    ¿Por qué es falso?
+                  </label>
+                  <textarea
+                    id="just-vf2"
+                    value={justVF2}
+                    oninput={(e) => (justVF2 = e.currentTarget.value)}
+                    rows="3"
+                    placeholder="Ej: La fotosíntesis produce oxígeno (O₂) y consume CO₂ con ayuda de la luz solar y la clorofila…"
+                    class={[
+                      'w-full rounded-xl border-2 px-4 py-3 text-sm leading-relaxed font-medium text-slate-700',
+                      'focus:outline-none focus:border-brand-red focus:ring-4 focus:ring-brand-red/5 resize-none transition-all bg-white',
+                      justificacionValida ? 'border-brand-green/30' : 'border-slate-200'
+                    ].join(' ')}
+                  ></textarea>
+                </div>
+              {/if}
+
+              <!-- Feedback cuando respondió Verdadero (incorrectamente) -->
+              {#if respVF2 === 'Verdadero'}
+                <div class="bg-brand-red/10 text-brand-red px-4 py-3 rounded-xl flex items-start gap-2 text-sm font-bold">
+                  <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                  Incorrecto. La fotosíntesis consume CO₂ y produce oxígeno (O₂), no al revés.
+                </div>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Barra de estado inferior -->
+          {#if respVF2 === 'Falso' && justVF2.trim().length > 0}
+            <div class={[
+              'px-6 py-3 flex items-center gap-2 text-sm font-bold border-t',
+              justificacionValida
+                ? 'bg-brand-green/10 text-brand-green border-brand-green/10'
+                : 'bg-brand-orange/10 text-brand-orange border-brand-orange/10'
+            ].join(' ')}>
+              <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                {#if justificacionValida}
+                  <path d="M5 13l4 4L19 7"/>
+                {:else}
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                {/if}
+              </svg>
+              {justificacionValida
+                ? '¡Bien! Tu justificación es válida para este ejemplo.'
+                : 'Agrega más detalle a tu justificación.'}
+            </div>
+          {:else if respVF2 === 'Falso' && justVF2.trim().length === 0}
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Escribe tu justificación arriba
+            </div>
+          {:else if !respVF2}
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Selecciona Verdadero o Falso
+            </div>
           {/if}
         </div>
       </div>
