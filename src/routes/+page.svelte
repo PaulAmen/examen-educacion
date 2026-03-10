@@ -6,6 +6,7 @@
   import PreguntaRenderer from '$lib/components/PreguntaRenderer.svelte';
   import Temporizador from '$lib/components/Temporizador.svelte';
   import IndicadorGuardado from '$lib/components/IndicadorGuardado.svelte';
+  import InstruccionesExamen from '$lib/components/InstruccionesExamen.svelte';
 
   const PREGUNTAS_POR_PAGINA = 10;
 
@@ -214,27 +215,88 @@
             <p class="text-xs text-slate-400">{authStore.user?.email}</p>
           </div>
 
-          <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
-            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-            </svg>
-          </div>
+          {#if examenStore.examenDeshabilitado}
+            <!-- Examen deshabilitado por el docente — estado de espera -->
+            <div class="relative flex items-center justify-center">
+              <div class="absolute w-20 h-20 rounded-full bg-brand-orange/10 animate-ping"></div>
+              <div class="absolute w-16 h-16 rounded-full bg-brand-orange/15 animate-pulse"></div>
+              <div class="relative w-14 h-14 bg-brand-orange/10 text-brand-orange rounded-2xl flex items-center justify-center">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+            </div>
 
-          <div>
-            <h3 class="text-lg font-bold text-slate-900">Acceso no habilitado</h3>
-            <p class="text-slate-500 text-sm mt-2 leading-relaxed">
-              {#if examenStore.examenDeshabilitado}
-                El sistema se habilitará en el horario programado.
-              {:else}
+            <div>
+              <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Examen no habilitado</h3>
+              <p class="text-slate-500 text-sm mt-2 leading-relaxed">
+                El docente activará el examen en el horario programado. Mantén esta página abierta.
+              </p>
+            </div>
+
+            <div class="flex items-center justify-center gap-2 text-[11px] font-bold text-brand-green">
+              <span class="w-2 h-2 bg-brand-green rounded-full animate-pulse"></span>
+              Verificando automáticamente cada minuto
+            </div>
+
+            <!-- Mini stepper de posición -->
+            <div class="flex items-center justify-center gap-1 pt-1">
+              {#each [1, 2, 3, 4, 5] as paso}
+                <div class="flex items-center gap-1">
+                  <div class={[
+                    'flex items-center justify-center rounded-full text-[9px] font-black border transition-all',
+                    paso === 2
+                      ? 'w-6 h-6 bg-brand-orange border-brand-orange text-white shadow-sm shadow-brand-orange/30'
+                      : paso < 2
+                        ? 'w-5 h-5 bg-brand-green border-brand-green text-white'
+                        : 'w-5 h-5 bg-white border-slate-200 text-slate-300'
+                  ].join(' ')}>
+                    {#if paso < 2}
+                      <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
+                    {:else}
+                      {paso}
+                    {/if}
+                  </div>
+                  {#if paso < 5}
+                    <div class="w-3 h-px {paso < 2 ? 'bg-brand-green/40' : 'bg-slate-100'}"></div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest -mt-2">Esperando habilitación</p>
+
+          {:else}
+            <!-- Sin examen asignado -->
+            <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Sin examen asignado</h3>
+              <p class="text-slate-500 text-sm mt-2 leading-relaxed">
                 No tienes un examen asignado. Contacta a coordinación académica.
-              {/if}
-            </p>
-          </div>
+              </p>
+            </div>
+          {/if}
 
           <button onclick={() => authStore.logout()} class="btn btn-outline w-full">
             Cerrar sesión
           </button>
         </div>
+
+        <a
+          href="{base}/guia"
+          target="_blank"
+          rel="noopener"
+          class="flex items-center justify-center gap-2 w-full max-w-sm text-xs font-black text-slate-500 hover:text-brand-red uppercase tracking-widest transition-colors py-2 rounded-xl hover:bg-brand-red/5"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1 1 .03 2.248-1.403 2.248H4.601c-1.432 0-2.402-1.248-1.403-2.248L5 14.5"/>
+          </svg>
+          Ver guía del examen con ejemplos
+          <svg class="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
 
       {:else}
         <!-- Welcome Screen -->
@@ -294,6 +356,21 @@
           </button>
           <button onclick={() => authStore.logout()} class="w-full mt-2 text-xs font-bold text-slate-400 hover:text-brand-red transition-colors uppercase tracking-widest">Cerrar sesión</button>
         </div>
+
+        <InstruccionesExamen estado={examenStore.estado} />
+
+        <a
+          href="{base}/guia"
+          target="_blank"
+          rel="noopener"
+          class="flex items-center justify-center gap-2 w-full max-w-md text-xs font-black text-slate-500 hover:text-brand-red uppercase tracking-widest transition-colors py-2 rounded-xl hover:bg-brand-red/5"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1 1 .03 2.248-1.403 2.248H4.601c-1.432 0-2.402-1.248-1.403-2.248L5 14.5"/>
+          </svg>
+          Practicar con ejemplos de preguntas
+          <svg class="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
       {/if}
 
       <!-- GLOBAL FOOTER (Visible on all screens EXCEPT active exam) -->
