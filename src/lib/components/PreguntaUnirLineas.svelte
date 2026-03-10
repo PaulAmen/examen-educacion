@@ -19,14 +19,31 @@
     ].filter(c => Boolean(c.texto)) as { clave: string; texto: string }[]
   );
 
-  // Definiciones disponibles
+  function shuffleConSemilla<T>(arr: T[], semilla: string): T[] {
+    let h = 0;
+    for (let i = 0; i < semilla.length; i++) {
+      h = (Math.imul(31, h) + semilla.charCodeAt(i)) | 0;
+    }
+    const result = [...arr];
+    for (let i = result.length - 1; i > 0; i--) {
+      h = (Math.imul(h ^ (h >>> 16), 0x45d9f3b)) | 0;
+      const j = Math.abs(h) % (i + 1);
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  // Definiciones revueltas de forma determinista por pregunta
   const definiciones = $derived(
-    [
-      pregunta.Opcion_B_o_Definicion1,
-      pregunta.Opcion_D_o_Definicion2,
-      pregunta.Definicion3,
-      pregunta.Definicion4
-    ].filter(Boolean) as string[]
+    shuffleConSemilla(
+      [
+        pregunta.Opcion_B_o_Definicion1,
+        pregunta.Opcion_D_o_Definicion2,
+        pregunta.Definicion3,
+        pregunta.Definicion4
+      ].filter(Boolean) as string[],
+      pregunta.ID_Pregunta
+    )
   );
 
   const emparejados = $derived(

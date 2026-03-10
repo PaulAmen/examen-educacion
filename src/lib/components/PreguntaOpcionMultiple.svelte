@@ -9,14 +9,32 @@
     disabled: boolean;
   } = $props();
 
-  // Construye las opciones desde los campos reales de la DB
+  // Shuffle determinista: mismo orden siempre para la misma pregunta, distinto entre preguntas
+  function shuffleConSemilla<T>(arr: T[], semilla: string): T[] {
+    let h = 0;
+    for (let i = 0; i < semilla.length; i++) {
+      h = (Math.imul(31, h) + semilla.charCodeAt(i)) | 0;
+    }
+    const result = [...arr];
+    for (let i = result.length - 1; i > 0; i--) {
+      h = (Math.imul(h ^ (h >>> 16), 0x45d9f3b)) | 0;
+      const j = Math.abs(h) % (i + 1);
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  // Construye las opciones desde los campos reales de la DB y las revuelve
   const opciones = $derived(
-    [
-      { letra: 'A', texto: pregunta.Opcion_A_o_Concepto1 },
-      { letra: 'B', texto: pregunta.Opcion_B_o_Definicion1 },
-      { letra: 'C', texto: pregunta.Opcion_C_o_Concepto2 },
-      { letra: 'D', texto: pregunta.Opcion_D_o_Definicion2 }
-    ].filter(o => Boolean(o.texto))
+    shuffleConSemilla(
+      [
+        { letra: 'A', texto: pregunta.Opcion_A_o_Concepto1 },
+        { letra: 'B', texto: pregunta.Opcion_B_o_Definicion1 },
+        { letra: 'C', texto: pregunta.Opcion_C_o_Concepto2 },
+        { letra: 'D', texto: pregunta.Opcion_D_o_Definicion2 }
+      ].filter(o => Boolean(o.texto)),
+      pregunta.ID_Pregunta
+    )
   );
 
   function seleccionar(letra: string) {
