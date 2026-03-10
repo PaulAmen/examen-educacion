@@ -85,6 +85,24 @@
 
 <svelte:head>
   <title>Guía del Examen — UNESUM</title>
+  <meta name="description" content="Aprende cómo funciona el sistema de evaluación de UNESUM y practica con ejemplos de cada tipo de pregunta." />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://paulamen.github.io/examen-educacion/guia" />
+  <meta property="og:title" content="Guía del Examen — UNESUM" />
+  <meta property="og:description" content="Aprende cómo funciona el sistema de evaluación y practica con ejemplos de cada tipo de pregunta antes de iniciar tu examen." />
+  <meta property="og:image" content="https://paulamen.github.io/examen-educacion/guia-preview.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="es_EC" />
+  <meta property="og:site_name" content="UNESUM Evaluaciones" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Guía del Examen — UNESUM" />
+  <meta name="twitter:description" content="Aprende cómo funciona el sistema de evaluación y practica con ejemplos de cada tipo de pregunta antes de iniciar tu examen." />
+  <meta name="twitter:image" content="https://paulamen.github.io/examen-educacion/guia-preview.webp" />
 </svelte:head>
 
 <div class="min-h-screen bg-brand-gray font-sans">
@@ -587,7 +605,7 @@
   </main>
 
   <footer class="border-t border-slate-200/50 py-6 text-center text-[11px] font-black text-slate-400 uppercase tracking-widest">
-    UNESUM — Sistema de Evaluación Académica
+    UNESUM — Sistema de Evaluación Académica &nbsp;·&nbsp; BY: <span class="text-slate-800">PAUL.AMEN@UNESUM.EDU.EC</span>
   </footer>
 </div>
 
