@@ -75,7 +75,7 @@
   }
 
   const pasos = [
-    { num: 1, label: 'Iniciar sesión', desc: 'Ingresa con tu cuenta Google institucional (@unesum.edu.ec).' },
+    { num: 1, label: 'Iniciar sesión', desc: 'Ingresa con tu cuenta Google institucional (@unesum.edu.ec).', url: 'https://paulamen.github.io/examen-educacion' },
     { num: 2, label: 'Verificar habilitación', desc: 'El docente activa el examen en el horario programado. Espera en esta pantalla.' },
     { num: 3, label: 'Iniciar examen', desc: 'Pulsa el botón para comenzar. El contador de 2 horas inicia en ese momento.' },
     { num: 4, label: 'Responder preguntas', desc: 'Avanza página por página. Tus respuestas se guardan automáticamente.' },
@@ -135,6 +135,12 @@
             <div class="pt-1.5">
               <p class="text-sm font-black text-slate-900">{paso.label}</p>
               <p class="text-sm text-slate-500 font-medium mt-0.5 leading-relaxed">{paso.desc}</p>
+              {#if paso.url}
+                <a href={paso.url} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-black text-brand-red hover:underline mt-1">
+                  {paso.url.replace('https://', '')}
+                  <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+              {/if}
             </div>
           </div>
         {/each}
