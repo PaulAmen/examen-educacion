@@ -53,7 +53,7 @@ export interface RespuestaConRespuesta {
 export type RespuestaUnir = Record<string, string>;
 export type RespuestaValor = RespuestaConRespuesta | RespuestaUnir;
 
-export type EstadoExamen = 'pendiente' | 'en_curso' | 'finalizado';
+export type EstadoExamen = 'pendiente' | 'en_curso' | 'entregado' | 'finalizado';
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'examen_respuestas';
@@ -255,31 +255,30 @@ class ExamenStore {
    */
   async entregarExamen() {
     const examenId = this.examenId;
-    if (!examenId || this.estado === 'finalizado') return;
-
-    this.guardando = true;
+    if (!examenId || this.estado === 'entregado' || this.estado === 'finalizado') return;
 
     if (this.#debounceTimer) {
       clearTimeout(this.#debounceTimer);
       this.#debounceTimer = null;
     }
 
+    // Bloqueo optimista: el estudiante ve la pantalla de entregado de inmediato
+    this.estado = 'entregado';
+    if (this.#intervalId) clearInterval(this.#intervalId);
+    if (this.#pollingId) clearInterval(this.#pollingId);
+
+    this.guardando = true;
     const { error } = await supabase
       .from('examenes_asignados')
       .update({
         respuestas_estudiante: this.respuestas,
-        estado: 'finalizado'
+        estado: 'entregado'
       })
       .eq('id_examen', examenId);
-
     this.guardando = false;
 
     if (error) {
-      this.error = `Error al entregar el examen: ${error.message}`;
-    } else {
-      this.estado = 'finalizado';
-      if (this.#intervalId) clearInterval(this.#intervalId);
-      if (this.#pollingId) clearInterval(this.#pollingId);
+      console.error('[ExamenStore] Error al entregar en DB:', error.message);
     }
   }
 

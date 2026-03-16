@@ -54,7 +54,14 @@
     }
   });
 
-  const bloqueado = $derived(examenStore.estado === 'finalizado');
+  // Al entregar (botón o tiempo agotado), salir de la pantalla activa
+  $effect(() => {
+    if (bloqueado && examenAbierto) {
+      examenAbierto = false;
+    }
+  });
+
+  const bloqueado = $derived(examenStore.estado === 'entregado' || examenStore.estado === 'finalizado');
   const enCurso = $derived(examenStore.estado === 'en_curso');
   const autorizado = $derived(
     !examenStore.sinExamen && !examenStore.examenDeshabilitado && !examenStore.error

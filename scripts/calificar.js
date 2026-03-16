@@ -66,7 +66,7 @@ console.log('Consultando exámenes finalizados sin calificación…');
 const { data: examenes, error: errExamenes } = await supabase
   .from('examenes_asignados')
   .select('id_examen, email_estudiante, nivel, preguntas_asignadas, respuestas_estudiante')
-  .eq('estado', 'finalizado')
+  .in('estado', ['entregado', 'finalizado'])
   .is('calificacion_final', null);
 
 if (errExamenes) {
