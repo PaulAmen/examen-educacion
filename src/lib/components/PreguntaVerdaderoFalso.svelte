@@ -10,7 +10,15 @@
   } = $props();
 
   function seleccionar(valor: 'Verdadero' | 'Falso') {
-    onRespuesta(indice, { respuesta: valor });
+    if (valor === 'Verdadero') {
+      onRespuesta(indice, { respuesta: valor });
+    } else {
+      onRespuesta(indice, { respuesta: valor, justificacion: respuesta?.justificacion ?? '' });
+    }
+  }
+
+  function actualizarJustificacion(texto: string) {
+    onRespuesta(indice, { respuesta: 'Falso', justificacion: texto });
   }
 </script>
 
@@ -44,4 +52,31 @@
     {/each}
   </div>
 
+  <!-- Justificación — solo cuando responde Falso -->
+  {#if respuesta?.respuesta === 'Falso'}
+    <div class={[
+      'rounded-2xl p-5 border-2 transition-all duration-300',
+      (respuesta?.justificacion ?? '').trim().length > 0
+        ? 'bg-brand-green/[0.03] border-brand-green/20'
+        : 'bg-slate-50 border-slate-100'
+    ].join(' ')}>
+      <label for="just-vf-{indice}" class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">
+        ¿Por qué es falso?
+      </label>
+      <textarea
+        id="just-vf-{indice}"
+        value={respuesta?.justificacion ?? ''}
+        oninput={(e) => actualizarJustificacion(e.currentTarget.value)}
+        {disabled}
+        rows="3"
+        placeholder="Explica por qué el enunciado es falso…"
+        class={[
+          'w-full rounded-xl border-2 px-4 py-3 text-sm leading-relaxed font-medium text-slate-700',
+          'focus:outline-none focus:border-brand-red focus:ring-4 focus:ring-brand-red/5 resize-none transition-all bg-white',
+          (respuesta?.justificacion ?? '').trim().length > 0 ? 'border-brand-green/30' : 'border-slate-200',
+          disabled ? 'opacity-40 cursor-not-allowed' : ''
+        ].join(' ')}
+      ></textarea>
+    </div>
+  {/if}
 </div>
